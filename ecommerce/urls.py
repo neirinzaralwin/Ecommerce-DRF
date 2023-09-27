@@ -5,6 +5,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from ecommerce.product import views
 
 router = DefaultRouter()
+#  r"category" will match the URL path /category/ exactly. 
 router.register(r"category", views.CategoryViewSet)
 router.register(r"brand", views.BrandViewSet)
 router.register(r"product", views.ProductViewSet)
