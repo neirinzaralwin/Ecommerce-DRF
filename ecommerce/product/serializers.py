@@ -23,17 +23,11 @@ class DiscountSerializer(serializers.ModelSerializer):
         model = Discount
         fields = "__all__"
 
-    # def validate_percentage(self, value):
-    #     if value < 0 or value > 100:
-    #         raise serializers.ValidationError(
-    #             "Discount percentage must be between 0 and 100"
-    #         )
-    #     return value
-
 
 class ProductSerializer(serializers.ModelSerializer):
     brand = BrandSerializer()
     category = CategorySerializer()
+    discount_price = serializers.SerializerMethodField(read_only=True)
     discounts = serializers.SerializerMethodField()
 
     class Meta:
@@ -46,6 +40,17 @@ class ProductSerializer(serializers.ModelSerializer):
             return DiscountSerializer(discounts, many=True).data
         except:
             return []
+
+    def get_discount_price(self, obj):
+        original_price = obj.price
+        discounts = obj.discounts.all()
+        price_list = []
+        if discounts:
+            for discount in discounts:
+                price = (discount.percentage / 100) * original_price
+                price_list.append(price)
+            return sum(price_list)
+        return original_price
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
