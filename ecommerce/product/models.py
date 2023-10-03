@@ -20,6 +20,14 @@ class Brand(models.Model):
         return self.name
 
 
+class Discount(models.Model):
+    name = models.CharField(max_length=100)
+    percentage = models.FloatField()
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     name = models.CharField(max_length=100)
     price = models.IntegerField()
@@ -29,17 +37,7 @@ class Product(models.Model):
     category = TreeForeignKey(
         Category, on_delete=models.SET_NULL, null=True, blank=True
     )
-    discounts = models.ManyToManyField("ProductDiscount")
-
-    def __str__(self):
-        return self.name
-
-
-class ProductDiscount(models.Model):
-    name = models.CharField(max_length=100)
-    price = models.IntegerField(null=True, blank=True)
-    start_date = models.DateTimeField(null=True, blank=True)
-    end_date = models.DateTimeField(null=True, blank=True)
+    discounts = models.ManyToManyField(Discount, null=True, blank=True)
 
     def __str__(self):
         return self.name

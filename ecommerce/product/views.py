@@ -3,7 +3,8 @@ from rest_framework import viewsets, status, generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import json
-from .models import Category, Brand, Product
+from .models import Category, Brand, Product, Discount
+from .validations.discount_validation import validateDiscountPercentage
 from .serializers import (
     CategorySerializer,
     BrandSerializer,
@@ -89,10 +90,30 @@ class ProductViewSet(viewsets.ViewSet):
             return Response({"success": True, "message": "No product yet", "data": []})
 
     def create(self, request):
+        discounts_data = request.data.pop("discounts", None)
         serializer = ProductCreateSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            product = Product.objects.get(id=serializer.data.get("id"))
+            obj = serializer.save()
+            product = Product.objects.get(id=obj.id)
+            if discounts_data:
+                for dis in discounts_data:
+                    if validateDiscountPercentage(dis.get("percentage")):
+                        discount = Discount.objects.create(
+                            name=dis.get("name"),
+                            percentage=dis.get("percentage"),
+                            product=product,  # Associate the discount with the product
+                        )
+                        product.discounts.add(discount)
+                        product.save()
+                    else:
+                        return Response(
+                            {
+                                "success": False,
+                                "message": "Percentage must be between 0 and 100",
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+
             return Response(
                 {
                     "success": True,
@@ -105,6 +126,27 @@ class ProductViewSet(viewsets.ViewSet):
             {"success": False, "message": "Invalid data", "data": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    def destroy(self, request, pk=None):
+        try:
+            if pk is not None:
+                product = self.queryset.get(pk=pk)
+                product.delete()
+                return Response(
+                    {"success": True, "message": "Product deleted successfully"},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                Product.objects.all().delete()
+                return Response(
+                    {"success": True, "message": "All products deleted successfully"},
+                    status=status.HTTP_200_OK,
+                )
+        except Product.DoesNotExist:
+            return Response(
+                {"success": False, "message": "Product doesn't exist"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 @api_view(["GET"])

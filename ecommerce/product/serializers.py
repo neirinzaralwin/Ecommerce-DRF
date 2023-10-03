@@ -1,15 +1,15 @@
 from rest_framework import serializers
-from .models import Category, Brand, Product, ProductDiscount
+from .models import Category, Brand, Product, Discount
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    parent_id = serializers.PrimaryKeyRelatedField(
+    parent_category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), allow_null=True, source="parent"
     )
 
     class Meta:
         model = Category
-        fields = ["id", "name", "parent_id"]
+        fields = ["id", "name", "parent_category_id"]
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -18,10 +18,17 @@ class BrandSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ProductDiscountSerializer(serializers.ModelSerializer):
+class DiscountSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProductDiscount
+        model = Discount
         fields = "__all__"
+
+    # def validate_percentage(self, value):
+    #     if value < 0 or value > 100:
+    #         raise serializers.ValidationError(
+    #             "Discount percentage must be between 0 and 100"
+    #         )
+    #     return value
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -36,7 +43,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_discounts(self, obj):
         try:
             discounts = obj.discounts.all()
-            return ProductDiscountSerializer(discounts, many=True).data
+            return DiscountSerializer(discounts, many=True).data
         except:
             return []
 
@@ -48,15 +55,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), allow_null=True, source="category"
     )
-    discounts = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         exclude = ["category", "brand"]
-
-    def get_discounts(self, obj):
-        try:
-            discounts = obj.discounts.all()
-            return ProductDiscountSerializer(discounts, many=True).data
-        except:
-            return []
