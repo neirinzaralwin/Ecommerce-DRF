@@ -25,8 +25,17 @@ class DiscountSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    brand = BrandSerializer()
-    category = CategorySerializer()
+    brand = BrandSerializer(read_only=True)
+    category = CategorySerializer(read_only=True)
+    brand_id = serializers.PrimaryKeyRelatedField(
+        queryset=Brand.objects.all(), source="brand", allow_null=False, write_only=True
+    )
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        source="category",
+        allow_null=True,
+        write_only=True,
+    )
     discount_price = serializers.SerializerMethodField(read_only=True)
     discounts = serializers.SerializerMethodField()
 
@@ -51,16 +60,3 @@ class ProductSerializer(serializers.ModelSerializer):
                 price_list.append(price)
             return sum(price_list)
         return original_price
-
-
-class ProductCreateSerializer(serializers.ModelSerializer):
-    brand_id = serializers.PrimaryKeyRelatedField(
-        queryset=Brand.objects.all(), allow_null=True, source="brand"
-    )
-    category_id = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), allow_null=True, source="category"
-    )
-
-    class Meta:
-        model = Product
-        exclude = ["category", "brand"]

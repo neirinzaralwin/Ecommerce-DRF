@@ -9,7 +9,6 @@ from .serializers import (
     CategorySerializer,
     BrandSerializer,
     ProductSerializer,
-    ProductCreateSerializer,
 )
 
 
@@ -91,7 +90,7 @@ class ProductViewSet(viewsets.ViewSet):
 
     def create(self, request):
         discounts_data = request.data.pop("discounts", None)
-        serializer = ProductCreateSerializer(data=request.data)
+        serializer = ProductSerializer(data=request.data)
         if serializer.is_valid():
             obj = serializer.save()
             product = Product.objects.get(id=obj.id)
@@ -113,7 +112,6 @@ class ProductViewSet(viewsets.ViewSet):
                             },
                             status=status.HTTP_400_BAD_REQUEST,
                         )
-
             return Response(
                 {
                     "success": True,
@@ -126,6 +124,33 @@ class ProductViewSet(viewsets.ViewSet):
             {"success": False, "message": "Invalid data", "data": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    def update(self, request, pk=None):
+        try:
+            instance = self.queryset.get(pk=pk)
+            serializer = ProductSerializer(instance, data=request.data, partial=True)
+            if serializer.is_valid():
+                obj = serializer.save()
+                return Response(
+                    {
+                        "success": True,
+                        "message": "Product updated successfully",
+                        "data": ProductSerializer(obj, many=False).data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            return Response(
+                {
+                    "success": False,
+                    "message": "Invalid data",
+                    "data": serializer.errors,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except:
+            return Response(
+                {"success": True, "message": "Product not found", "data": {}}
+            )
 
     def destroy(self, request, pk=None):
         try:

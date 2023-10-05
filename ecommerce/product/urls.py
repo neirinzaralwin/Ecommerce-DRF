@@ -7,7 +7,7 @@ category_list = CategoryViewSet.as_view(
 
 brand_list = BrandViewSet.as_view({"get": "list", "post": "create"})
 product_list = ProductViewSet.as_view(
-    {"get": "list", "post": "create", "delete": "destroy"}
+    {"get": "list", "post": "create", "patch": "update", "delete": "destroy"}
 )
 
 urlpatterns = [
