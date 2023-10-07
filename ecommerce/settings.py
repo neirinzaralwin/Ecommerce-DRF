@@ -41,9 +41,10 @@ INSTALLED_APPS = [
     "mptt",
     "rest_framework",
     "rest_framework.authtoken",
-    "drf_spectacular",  # documentation for swagger ui
+    "phonenumber_field",
     # internal apps
     "ecommerce.product",
+    "ecommerce.user",
 ]
 
 MIDDLEWARE = [
@@ -128,6 +129,8 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "user.User"
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Ecommerce DRF",

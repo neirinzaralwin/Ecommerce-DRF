@@ -37,7 +37,7 @@ class Product(models.Model):
     category = TreeForeignKey(
         Category, on_delete=models.SET_NULL, null=True, blank=True
     )
-    discounts = models.ManyToManyField(Discount, null=True, blank=True)
+    discounts = models.ManyToManyField(Discount, blank=True)
 
     def __str__(self):
         return self.name
