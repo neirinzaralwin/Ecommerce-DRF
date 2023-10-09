@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import json
 from .models import Category, Brand, Product, Discount
 from .validations.discount_validation import validateDiscountPercentage
 from .serializers import (
@@ -14,6 +14,7 @@ from .serializers import (
 
 class CategoryViewSet(viewsets.ViewSet):
     queryset = Category.objects.all()
+    # permission_classes = [IsAuthenticated]
 
     def list(self, request):
         serializer = CategorySerializer(self.queryset, many=True)
