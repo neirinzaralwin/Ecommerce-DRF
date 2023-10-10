@@ -15,7 +15,7 @@ class UserManager(BaseUserManager):
         return user
 
     def get_queryset(self):
-        return super().get_queryset().filter(is_admin=True)
+        return super().get_queryset()
 
 
 class StaffManager(BaseUserManager):
