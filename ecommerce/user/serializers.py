@@ -10,7 +10,9 @@ class UserSerializer(serializers.ModelSerializer):
         read_only=False,
         style={"input_type": "password"},
     )
-    role = serializers.ChoiceField(choices=["Staff", "Customer"], required=False)
+    role = serializers.ChoiceField(
+        choices=["Admin", "Staff", "Customer"], required=False
+    )
 
     class Meta:
         model = User
@@ -21,5 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
         instance = self.Meta.model(**validated_data)
         if role is None:
             instance.role = instance.base_role
+        else:
+            instance.role = role
         instance.save()
         return instance

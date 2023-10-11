@@ -8,7 +8,7 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, **extra_fields):
-        user = self.create_user(**extra_fields)
+        user = self.model(**extra_fields)
         user.is_admin = True
         user.role = self.model.Role.ADMIN
         user.save()

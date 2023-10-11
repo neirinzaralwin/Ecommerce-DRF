@@ -19,7 +19,7 @@ class User(AbstractBaseUser):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     base_role = Role.CUSTOMER
-    role = models.CharField(max_length=50, choices=Role.choices)
+    role = models.CharField(max_length=50, choices=Role.choices, default=base_role)
     manager = UserManager()
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = ["username"]
@@ -38,7 +38,13 @@ class User(AbstractBaseUser):
         else:
             self.password = make_password(self.password)
         if not self.role:
-            self.role = Role.CUSTOMER
+            self.role = self.Role.CUSTOMER
+        if self.role == "Admin":
+            self.role = self.Role.ADMIN
+            self.is_admin = True
+        if self.role == "Staff":
+            self.role = self.Role.STAFF
+            self.is_staff = True
         print("----- user is saved -----")
         super().save(*args, **kwargs)
 

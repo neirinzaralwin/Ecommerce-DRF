@@ -7,17 +7,23 @@ from .serializers import UserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import User, Customer
+from django.contrib.auth.hashers import make_password
+from ecommerce.permissions import IsAdminInheritStaff
 
 
 class UserCreate(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminInheritStaff]
 
     def post(self, request):
         user_serialzer = UserSerializer(data=request.data)
         if user_serialzer.is_valid():
             newuser = user_serialzer.save()
             return Response(
-                {"success": True, "message": "successful", "data": user_serialzer.data},
+                {
+                    "success": True,
+                    "message": "successful",
+                    "data": user_serialzer.data,
+                },
                 status=status.HTTP_201_CREATED,
             )
         return Response(
@@ -38,11 +44,9 @@ class UserInfoFromToken(APIView):
 
     def get(self, request):
         access_token = request.META.get("HTTP_AUTHORIZATION").split(" ")[1]
-        # Decode the access token using the Simple JWT decoder.
         decoded_token = JWTAuthentication.get_validated_token(
             self, raw_token=access_token
         )
-        # Get the user ID from the decoded token.
         user_id = decoded_token["user_id"]
         user = self.user_model.manager.get(id=user_id)
         if user:
