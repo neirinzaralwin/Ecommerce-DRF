@@ -2,13 +2,14 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import UserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import User, Customer
+from .serializers import UserSerializer
 from django.contrib.auth.hashers import make_password
-from ecommerce.permissions import IsAdminInheritStaff
+from ecommerce.permissions import IsAdminInheritStaff, IsAdminOrStaff
 
 
 class UserCreate(APIView):
@@ -34,6 +35,18 @@ class UserCreate(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+class UserListView(APIView):
+    permission_classes = [IsAdminOrStaff]
+
+    def get(self, request):
+        users = User.manager.all()
+        serializer = UserSerializer(users, many=True)
+        if serializer.data:
+            return Response(
+                {"success": True, "message": "successful", "data": serializer.data}
+            )
 
 
 class UserInfoFromToken(APIView):
@@ -80,7 +93,6 @@ class UserLogin(TokenObtainPairView):
                 )
             if user.check_password(password):
                 response = super().post(request, *args, **kwargs)
-                print(f" response token {response.data}")
                 return Response(
                     {
                         "success": True,
