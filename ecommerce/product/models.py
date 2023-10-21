@@ -1,5 +1,7 @@
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
+from ecommerce.common.common import file_location
+from django.utils.translation import gettext_lazy as _
 
 
 class Category(MPTTModel):
@@ -28,6 +30,14 @@ class Discount(models.Model):
         return self.name
 
 
+class ProductImage(models.Model):
+    image = models.ImageField(
+        _("Image"),
+        upload_to=file_location,
+        default="default/product_default.jpg",
+    )
+
+
 class Product(models.Model):
     name = models.CharField(max_length=100)
     price = models.IntegerField()
@@ -38,6 +48,7 @@ class Product(models.Model):
         Category, on_delete=models.SET_NULL, null=True, blank=True
     )
     discounts = models.ManyToManyField(Discount, blank=True)
+    images = models.ManyToManyField(ProductImage, blank=True)
 
     def __str__(self):
         return self.name

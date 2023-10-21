@@ -2,14 +2,19 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Category, Brand, Product, Discount
+from .models import Category, Brand, Product, Discount, ProductImage
 from .validations.discount_validation import validateDiscountPercentage
+from ecommerce.permissions import IsAdminOrStaff
 from .serializers import (
     CategorySerializer,
     BrandSerializer,
     ProductSerializer,
+    ProductImageSerializer,
 )
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.conf import settings
 
 
 class CategoryViewSet(viewsets.ViewSet):
@@ -128,10 +133,31 @@ class ProductViewSet(viewsets.ViewSet):
 
     def update(self, request, pk=None):
         try:
+            discounts_data = request.data.pop("discounts", None)
             instance = self.queryset.get(pk=pk)
             serializer = ProductSerializer(instance, data=request.data, partial=True)
             if serializer.is_valid():
                 obj = serializer.save()
+                product = Product.objects.get(id=obj.id)
+                if discounts_data:
+                    product.discounts.clear()
+                    for dis in discounts_data:
+                        if validateDiscountPercentage(dis.get("percentage")):
+                            discount = Discount.objects.create(
+                                name=dis.get("name"),
+                                percentage=dis.get("percentage"),
+                                product=product,  # Associate the discount with the product
+                            )
+                            product.discounts.add(discount)
+                            product.save()
+                        else:
+                            return Response(
+                                {
+                                    "success": False,
+                                    "message": "Percentage must be between 0 and 100",
+                                },
+                                status=status.HTTP_400_BAD_REQUEST,
+                            )
                 return Response(
                     {
                         "success": True,
@@ -185,6 +211,44 @@ def product_detail_view(request):
             serializer = ProductSerializer(product)
             return Response(
                 {"success": True, "message": "Success", "data": serializer.data}
+            )
+        except:
+            return Response(
+                {"success": True, "message": "Product not found", "data": {}}
+            )
+
+
+class ProductImageUpload(APIView):
+    permission_classes = [IsAdminOrStaff]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, pk=None):
+        try:
+            images = request.data.pop("images", None)
+            obj = Product.objects.get(pk=pk)
+            if images is not None:
+                product = Product.objects.get(id=obj.id)
+                if images:
+                    product.images.clear()
+                    for image in images:
+                        image = ProductImage.objects.create(image=image)
+                        product.images.add(image)
+                        product.save()
+                return Response(
+                    {
+                        "success": True,
+                        "message": "Product updated successfully",
+                        "data": ProductSerializer(obj, many=False).data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            return Response(
+                {
+                    "success": False,
+                    "message": "Invalid data",
+                    "data": serializer.errors,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
         except:
             return Response(

@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Category, Brand, Product, Discount
+from .models import Category, Brand, Product, Discount, ProductImage
+from django.conf import settings
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -24,6 +25,12 @@ class DiscountSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ["image"]
+
+
 class ProductSerializer(serializers.ModelSerializer):
     brand = BrandSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
@@ -38,10 +45,19 @@ class ProductSerializer(serializers.ModelSerializer):
     )
     discount_price = serializers.SerializerMethodField(read_only=True)
     discounts = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField(required=False)
 
     class Meta:
         model = Product
         fields = "__all__"
+
+    def get_images(self, obj):
+        try:
+            images = obj.images.all()
+            image_urls = [img.image.url for img in images]
+            return image_urls
+        except:
+            return []
 
     def get_discounts(self, obj):
         try:
