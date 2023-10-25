@@ -13,8 +13,8 @@ class User(AbstractBaseUser):
 
     username = models.CharField(max_length=250)
     phone = models.CharField(max_length=20, unique=True)
-    created_at = models.DateTimeField(default=timezone.now())
-    updated_at = models.DateTimeField(default=timezone.now())
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -28,7 +28,7 @@ class User(AbstractBaseUser):
         return self.username
 
     def save(self, *args, **kwargs):
-        self.updated_at = timezone.now()
+        self.updated_at = timezone.now().isoformat()
         if not self.username:
             raise ValueError("You must provide a username")
         if not self.phone:

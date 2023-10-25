@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from .views import UserCreate, UserLogin, UserInfoFromToken, UserListView
 
 app_name = "users"
@@ -8,4 +8,5 @@ urlpatterns = [
     path("login/", UserLogin.as_view(), name="login"),
     path("info/", UserInfoFromToken.as_view(), name="user_info"),
     path("list/", UserListView.as_view(), name="user_list"),
+    path("cart/", include("ecommerce.cart.urls")),
 ]
