@@ -11,10 +11,19 @@ class CartSerializer(serializers.ModelSerializer):
         queryset=Product.objects.all(), source="parent", write_only=True
     )
     product = ProductSerializer(read_only=True)
+    total = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Cart
         fields = "__all__"
+
+    def get_total(self, obj):
+        quantity = obj.quantity
+        price = obj.product.price
+        if obj.product.discounts:
+            serializer = ProductSerializer(obj.product)
+            price = serializer.data.get("discount_price")
+        return price * quantity
 
 
 class CartSessionSerializer(serializers.ModelSerializer):
@@ -22,13 +31,13 @@ class CartSessionSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(
         queryset=User.manager.all(), source="parent", write_only=True
     )
-    total = serializers.SerializerMethodField()
+    grand_total = serializers.SerializerMethodField()
     carts = serializers.SerializerMethodField()
     user = UserSerializer(write_only=True)
 
     class Meta:
         model = CartSession
-        fields = "__all__"
+        exclude = ("id",)
 
     def get_carts(self, obj):
         try:
@@ -37,12 +46,13 @@ class CartSessionSerializer(serializers.ModelSerializer):
         except:
             return []
 
-    def get_total(self, obj):
+    def get_grand_total(self, obj):
         carts = obj.carts.all()
         if carts:
             value = 0.0
             for cart in carts:
-                value += cart.product.price
+                serializer = CartSerializer(cart)
+                value += serializer.data.get("total")
             return value
         else:
             return 0.0

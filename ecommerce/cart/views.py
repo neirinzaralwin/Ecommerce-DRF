@@ -14,6 +14,30 @@ from ecommerce.cart.serializers import CartSerializer, CartSessionSerializer
 class CartView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        try:
+            user = get_user_from_access_token(self, request)
+            cart_session, created = CartSession.objects.get_or_create(user=user)
+            serializer = CartSessionSerializer(cart_session)
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Successful",
+                    "data": serializer.data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "message": str(e),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
     def post(self, request):
         try:
             product_id = request.data.pop("product_id", None)
@@ -31,6 +55,40 @@ class CartView(APIView):
                 {
                     "success": True,
                     "message": "Successfully added",
+                    "data": serializer.data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "message": str(e),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def delete(self, request):
+        try:
+            cart_id = request.data.pop("cart_id", None)
+            if cart_id is None:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Please enter cart_id",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            user = get_user_from_access_token(self, request)
+            cart_session = get_object_or_404(CartSession, user=user)
+            serializer = CartSessionSerializer(cart_session)
+            cart = Cart.objects.get(id=cart_id)
+            cart.delete()
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Successfully deleted",
                     "data": serializer.data,
                 },
                 status=status.HTTP_201_CREATED,
