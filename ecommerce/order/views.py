@@ -2,7 +2,9 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from ecommerce.permissions import IsAdminOrStaff
 from ecommerce.common.common import get_user_from_access_token
+from ecommerce.common.custom_pagination import CustomPagination, PaginationHandlerMixin
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from .models import OrderStatus, Order
@@ -10,7 +12,26 @@ from .serializers import OrderSerializer
 from ecommerce.cart.models import Cart, CartSession
 from ecommerce.cart.serializers import CartSerializer, CartSessionSerializer
 
-# Create your views here.
+
+class AllOrderAdminView(APIView, PaginationHandlerMixin):
+    pagination_class = CustomPagination
+    permission_classes = [IsAdminOrStaff]
+
+    def get(self, request):
+        try:
+            orders = Order.objects.all()
+            return self.custom_paginated_response(
+                serializer_class=OrderSerializer, queryset=orders
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "message": str(e),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class OrderNow(APIView):

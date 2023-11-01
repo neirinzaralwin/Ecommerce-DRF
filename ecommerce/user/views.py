@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import UserSerializer
+from ecommerce.common.custom_pagination import CustomPagination, PaginationHandlerMixin
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import User, Customer
@@ -37,16 +38,15 @@ class UserCreate(APIView):
         )
 
 
-class UserListView(APIView):
+class UserListView(APIView, PaginationHandlerMixin):
+    pagination_class = CustomPagination
     permission_classes = [IsAdminOrStaff]
 
     def get(self, request):
         users = User.manager.all()
-        serializer = UserSerializer(users, many=True)
-        if serializer.data:
-            return Response(
-                {"success": True, "message": "successful", "data": serializer.data}
-            )
+        return self.custom_paginated_response(
+            serializer_class=UserSerializer, queryset=users
+        )
 
 
 class UserInfoFromToken(APIView):

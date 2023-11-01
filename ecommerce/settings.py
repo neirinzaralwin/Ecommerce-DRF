@@ -158,6 +158,8 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+    "DEFAULT_PAGINATION_CLASS": "ecommerce.common.custom_pagination.CustomPagination",
+    "PAGE_SIZE": 2,
 }
 
 SIMPLE_JWT = {
