@@ -110,6 +110,8 @@ class DeleteAllCart(APIView):
         try:
             user = get_user_from_access_token(self, request)
             cart_session = get_object_or_404(CartSession, user=user)
+            for cart in cart_session.carts.all():
+                cart.delete()
             cart_session.carts.clear()
             cart_session.save()
             serializer = CartSessionSerializer(cart_session)

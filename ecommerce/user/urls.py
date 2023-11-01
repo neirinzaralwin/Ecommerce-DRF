@@ -9,4 +9,5 @@ urlpatterns = [
     path("info/", UserInfoFromToken.as_view(), name="user_info"),
     path("list/", UserListView.as_view(), name="user_list"),
     path("cart/", include("ecommerce.cart.urls")),
+    path("order/", include("ecommerce.order.urls")),
 ]
