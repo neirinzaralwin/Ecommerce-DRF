@@ -3,6 +3,10 @@ from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 from .managers.manager import UserManager, StaffManager, CustomerManager
+from django.utils.crypto import get_random_string
+
+
+SALT_LENGTH = 12
 
 
 class User(AbstractBaseUser):
@@ -13,6 +17,10 @@ class User(AbstractBaseUser):
 
     username = models.CharField(max_length=250)
     phone = models.CharField(max_length=20, unique=True)
+    address = models.CharField(max_length=250, blank=True, null=True)
+    salt = models.CharField(
+        max_length=SALT_LENGTH, default=get_random_string(SALT_LENGTH)
+    )
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
     is_admin = models.BooleanField(default=False)
@@ -36,7 +44,7 @@ class User(AbstractBaseUser):
         if not self.password:
             raise ValueError("You must provide a password")
         else:
-            self.password = make_password(self.password)
+            self.password = make_password(self.password + self.salt)
         if not self.role:
             self.role = self.Role.CUSTOMER
         if self.role == "Admin":

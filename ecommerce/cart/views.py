@@ -1,10 +1,15 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
+from ecommerce.permissions import (
+    IsAdminInheritStaff,
+    IsAdminOrStaff,
+    IsAuthenticated,
+    AllowAny,
+)
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from ecommerce.common.common import get_user_from_access_token
+from ecommerce.user.managers.jwt_manager import get_user_from_access_token
 from ecommerce.product.models import Product
 from ecommerce.cart.models import Cart, CartSession
 from ecommerce.cart.serializers import CartSerializer, CartSessionSerializer

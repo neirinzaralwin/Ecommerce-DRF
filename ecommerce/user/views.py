@@ -2,15 +2,21 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import UserSerializer
 from ecommerce.common.custom_pagination import CustomPagination, PaginationHandlerMixin
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from .managers.jwt_manager import create_jwt_token, get_user_from_access_token
+
+# from rest_framework_simplejwt.views import TokenObtainPairView
+# from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import User, Customer
 from .serializers import UserSerializer
 from django.contrib.auth.hashers import make_password
-from ecommerce.permissions import IsAdminInheritStaff, IsAdminOrStaff
+from ecommerce.permissions import (
+    IsAdminInheritStaff,
+    IsAdminOrStaff,
+    IsAuthenticated,
+    AllowAny,
+)
 
 
 class UserCreate(APIView):
@@ -20,10 +26,13 @@ class UserCreate(APIView):
         user_serialzer = UserSerializer(data=request.data)
         if user_serialzer.is_valid():
             newuser = user_serialzer.save()
+            refresh_token, access_token = create_jwt_token(user=newuser)
             return Response(
                 {
                     "success": True,
-                    "message": "successful",
+                    "message": "Registration successful",
+                    "refresh_token": refresh_token,
+                    "access_token": access_token,
                     "data": user_serialzer.data,
                 },
                 status=status.HTTP_201_CREATED,
@@ -50,19 +59,13 @@ class UserListView(APIView, PaginationHandlerMixin):
 
 
 class UserInfoFromToken(APIView):
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     user_model = User
     serializer_class = UserSerializer
 
     def get(self, request):
-        access_token = request.META.get("HTTP_AUTHORIZATION").split(" ")[1]
-        decoded_token = JWTAuthentication.get_validated_token(
-            self, raw_token=access_token
-        )
-        user_id = decoded_token["user_id"]
-        user = self.user_model.manager.get(id=user_id)
-        if user:
+        user = get_user_from_access_token(self, request)
+        if user is not None:
             serializer = self.serializer_class(instance=user)
             return Response(
                 {
@@ -79,7 +82,10 @@ class UserInfoFromToken(APIView):
             )
 
 
-class UserLogin(TokenObtainPairView):
+# class UserLogin(TokenObtainPairView):
+class UserLogin(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         phone = request.data.get("phone")
         password = request.data.get("password")
@@ -91,14 +97,15 @@ class UserLogin(TokenObtainPairView):
                     {"success": False, "message": "Your account is inactive"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            if user.check_password(password):
-                response = super().post(request, *args, **kwargs)
+            if user.check_password(password + user.salt):
+                # response = super().post(request, *args, **kwargs)
+                refresh_token, access_token = create_jwt_token(user=user)
                 return Response(
                     {
                         "success": True,
                         "message": "successfully login",
-                        "refresh_token": response.data.get("refresh"),
-                        "access_token": response.data.get("access"),
+                        "refresh_token": refresh_token,
+                        "access_token": access_token,
                         "data": serializer.data,
                     },
                     status=status.HTTP_200_OK,

@@ -1,6 +1,19 @@
 from rest_framework import permissions
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from ecommerce.common.common import get_user_from_access_token
+from ecommerce.user.managers.jwt_manager import get_user_from_access_token
+
+
+class AllowAny(permissions.AllowAny):
+    def has_permission(self, request, view):
+        return True
+
+
+class IsAuthenticated(permissions.IsAuthenticated):
+    def has_permission(self, request, view):
+        user = get_user_from_access_token(self, request)
+        if not user:
+            return False
+        else:
+            return True
 
 
 class IsAdminOrReadOnly(permissions.IsAuthenticated):
@@ -26,9 +39,13 @@ class IsAdminInheritStaff(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method != "POST":
             return False
-        if request.user.is_staff:
-            requested_role = request.data.get("role")
-            if requested_role is None or requested_role == "Customer":
+        requested_role = request.data.get("role", None)
+        if requested_role is None:
+            requested_role = "Customer"
+        requested_user = get_user_from_access_token(self, request)
+        if requested_user.is_admin:
+            return True
+        if requested_user.is_staff:
+            if requested_role == "Customer":
                 return True
-            return False
-        return request.user.is_admin
+        return False

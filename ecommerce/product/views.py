@@ -1,12 +1,16 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Category, Brand, Product, Discount, ProductImage
 from .validations.discount_validation import validateDiscountPercentage
-from ecommerce.permissions import IsAdminOrStaff
+from ecommerce.permissions import (
+    IsAdminInheritStaff,
+    IsAdminOrStaff,
+    IsAuthenticated,
+    AllowAny,
+)
 from .serializers import (
     CategorySerializer,
     BrandSerializer,

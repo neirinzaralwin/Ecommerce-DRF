@@ -1,9 +1,13 @@
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from ecommerce.permissions import IsAdminOrStaff
-from ecommerce.common.common import get_user_from_access_token
+from ecommerce.permissions import (
+    IsAdminInheritStaff,
+    IsAdminOrStaff,
+    IsAuthenticated,
+    AllowAny,
+)
+from ecommerce.user.managers.jwt_manager import get_user_from_access_token
 from ecommerce.common.custom_pagination import CustomPagination, PaginationHandlerMixin
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
