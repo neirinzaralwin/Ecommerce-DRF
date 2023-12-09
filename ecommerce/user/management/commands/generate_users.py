@@ -31,4 +31,6 @@ class Command(BaseCommand):
                 address=address,
             )
 
-        self.stdout.write(f"{count} users are generated successfully")
+        self.stdout.write(
+            self.style.SUCCESS(f"{count} users are generated successfully")
+        )

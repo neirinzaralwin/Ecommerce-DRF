@@ -23,7 +23,7 @@ from django.conf import settings
 
 class CategoryViewSet(viewsets.ViewSet):
     queryset = Category.objects.all()
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def list(self, request):
         serializer = CategorySerializer(self.queryset, many=True)
@@ -56,6 +56,7 @@ class CategoryViewSet(viewsets.ViewSet):
 
 class BrandViewSet(viewsets.ViewSet):
     queryset = Brand.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def list(self, request):
         serializer = BrandSerializer(self.queryset, many=True)
@@ -88,15 +89,11 @@ class BrandViewSet(viewsets.ViewSet):
 
 class ProductViewSet(viewsets.ViewSet):
     queryset = Product.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def list(self, request):
         serializer = ProductSerializer(self.queryset, many=True)
-        if serializer.data:
-            return Response(
-                {"success": True, "message": "successful", "data": serializer.data}
-            )
-        else:
-            return Response({"success": True, "message": "No product yet", "data": []})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request):
         discounts_data = request.data.pop("discounts", None)
@@ -117,21 +114,16 @@ class ProductViewSet(viewsets.ViewSet):
                     else:
                         return Response(
                             {
-                                "success": False,
-                                "message": "Percentage must be between 0 and 100",
+                                "error": "Percentage must be between 0 and 100",
                             },
                             status=status.HTTP_400_BAD_REQUEST,
                         )
             return Response(
-                {
-                    "success": True,
-                    "message": "Product created successfully",
-                    "data": ProductSerializer(product, many=False).data,
-                },
+                ProductSerializer(product, many=False).data,
                 status=status.HTTP_201_CREATED,
             )
         return Response(
-            {"success": False, "message": "Invalid data", "data": serializer.errors},
+            serializer.errors,
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -157,30 +149,22 @@ class ProductViewSet(viewsets.ViewSet):
                         else:
                             return Response(
                                 {
-                                    "success": False,
-                                    "message": "Percentage must be between 0 and 100",
+                                    "error": "Percentage must be between 0 and 100",
                                 },
                                 status=status.HTTP_400_BAD_REQUEST,
                             )
                 return Response(
-                    {
-                        "success": True,
-                        "message": "Product updated successfully",
-                        "data": ProductSerializer(obj, many=False).data,
-                    },
+                    ProductSerializer(obj, many=False).data,
                     status=status.HTTP_200_OK,
                 )
             return Response(
-                {
-                    "success": False,
-                    "message": "Invalid data",
-                    "data": serializer.errors,
-                },
+                serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except:
             return Response(
-                {"success": True, "message": "Product not found", "data": {}}
+                {"message": "Product not found"},
+                status=status.HTTP_200_OK,
             )
 
     def destroy(self, request, pk=None):
@@ -189,18 +173,16 @@ class ProductViewSet(viewsets.ViewSet):
                 product = self.queryset.get(pk=pk)
                 product.delete()
                 return Response(
-                    {"success": True, "message": "Product deleted successfully"},
                     status=status.HTTP_200_OK,
                 )
             else:
                 Product.objects.all().delete()
                 return Response(
-                    {"success": True, "message": "All products deleted successfully"},
                     status=status.HTTP_200_OK,
                 )
         except Product.DoesNotExist:
             return Response(
-                {"success": False, "message": "Product doesn't exist"},
+                {"error": "Product doesn't exist"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -213,12 +195,11 @@ def product_detail_view(request):
         try:
             product = get_object_or_404(Product, pk=id)
             serializer = ProductSerializer(product)
-            return Response(
-                {"success": True, "message": "Success", "data": serializer.data}
-            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except:
             return Response(
-                {"success": True, "message": "Product not found", "data": {}}
+                {"error": "Product not found"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
 
