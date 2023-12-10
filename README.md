@@ -1,6 +1,8 @@
-# Ecommerce-DRF
+# Project Romance
 
-## Django sample ecommerce project for very beginner.
+## Django backend project.
+
+disclaimer: I'm newbie to backend.
 
 Project started 1:13AM Fri 22 Sep 2023.
 
