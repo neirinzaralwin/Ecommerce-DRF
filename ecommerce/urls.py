@@ -8,10 +8,10 @@ from django.conf.urls.static import static
 #     TokenRefreshView,
 # )
 
-
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("ecommerce.product.urls")),
+    path("api/", include("ecommerce.contact_us.urls")),
     path("api/user/", include("ecommerce.user.urls", namespace="users")),
     # path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     # path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
