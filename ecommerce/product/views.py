@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Category, Brand, Product, Discount, ProductImage
 from .validations.discount_validation import validateDiscountPercentage
+from ecommerce.common.custom_pagination import CustomPagination, PaginationHandlerMixin
 from ecommerce.permissions import (
     IsAdminInheritStaff,
     IsAdminOrStaff,
@@ -21,79 +22,59 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.conf import settings
 
 
-class CategoryViewSet(viewsets.ViewSet):
+class CategoryViewSet(PaginationHandlerMixin, viewsets.ViewSet):
+    pagination_class = CustomPagination
     queryset = Category.objects.all()
     permission_classes = [IsAuthenticated]
 
     def list(self, request):
-        serializer = CategorySerializer(self.queryset, many=True)
-        return Response(
-            {"success": True, "message": "successful", "data": serializer.data}
+        return self.custom_paginated_response(
+            serializer_class=CategorySerializer, queryset=self.queryset
         )
 
     def create(self, request):
         serializer = CategorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(
-                {
-                    "success": True,
-                    "message": "Category created successfully",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_201_CREATED,
-            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(
-                {
-                    "success": False,
-                    "message": "Category creation failed",
-                    "error": serializer.errors,
-                },
+                {"error": "Category creation failed"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
 
-class BrandViewSet(viewsets.ViewSet):
+class BrandViewSet(viewsets.ViewSet, PaginationHandlerMixin):
+    pagination_class = CustomPagination
     queryset = Brand.objects.all()
     permission_classes = [IsAuthenticated]
 
     def list(self, request):
-        serializer = BrandSerializer(self.queryset, many=True)
-        return Response(
-            {"success": True, "message": "successful", "data": serializer.data}
+        return self.custom_paginated_response(
+            serializer_class=BrandSerializer, queryset=self.queryset
         )
 
     def create(self, request):
         serializer = BrandSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(
-                {
-                    "success": True,
-                    "message": "Brand created successfully",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_201_CREATED,
-            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(
-                {
-                    "success": False,
-                    "message": "Brand creation failed",
-                    "error": serializer.errors,
-                },
+                {"error": "Brand creation failed"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
 
-class ProductViewSet(viewsets.ViewSet):
+class ProductViewSet(viewsets.ViewSet, PaginationHandlerMixin):
+    pagination_class = CustomPagination
     queryset = Product.objects.all()
     permission_classes = [IsAuthenticated]
 
     def list(self, request):
-        serializer = ProductSerializer(self.queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.custom_paginated_response(
+            serializer_class=ProductSerializer, queryset=self.queryset
+        )
 
     def create(self, request):
         discounts_data = request.data.pop("discounts", None)
@@ -148,9 +129,7 @@ class ProductViewSet(viewsets.ViewSet):
                             product.save()
                         else:
                             return Response(
-                                {
-                                    "error": "Percentage must be between 0 and 100",
-                                },
+                                {"error": "Percentage must be between 0 and 100"},
                                 status=status.HTTP_400_BAD_REQUEST,
                             )
                 return Response(
@@ -163,7 +142,7 @@ class ProductViewSet(viewsets.ViewSet):
             )
         except:
             return Response(
-                {"message": "Product not found"},
+                {"error": "Product not found"},
                 status=status.HTTP_200_OK,
             )
 

@@ -21,8 +21,6 @@ class CustomPagination(PageNumberPagination):
     def get_paginated_response(self, data):
         return Response(
             {
-                "success": True,
-                "message": "successful",
                 "total": self.page.paginator.count,
                 "page": int(self.request.GET.get("page", DEFAULT_PAGE)),
                 "has_more_pages": self.calculateHasMorePages(
@@ -65,6 +63,6 @@ class PaginationHandlerMixin(object):
         else:
             serializer = serializer_class(instance, many=True)
             return Response(
-                {"success": True, "message": "successful", "data": serializer.data},
+                serializer.data,
                 status=status.HTTP_200_OK,
             )
