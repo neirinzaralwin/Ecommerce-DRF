@@ -28,6 +28,7 @@ def create_product(count):
         description = fake.text()
         is_digital = bool(random.randint(0, 1))
         price = random.randint(1000, 100000)
+        stock = random.randint(5, 20)
         # Select random category and brand
         category = Category.objects.order_by("?").first()
         brand = Brand.objects.order_by("?").first()
@@ -39,6 +40,8 @@ def create_product(count):
         product = Product.objects.create(
             name=name,
             price=price,
+            description=description,
+            stock=stock,
             is_digital=is_digital,
             category=category,
             brand=brand,

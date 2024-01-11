@@ -42,6 +42,8 @@ class Product(models.Model):
     name = models.CharField(max_length=100)
     price = models.IntegerField()
     description = models.TextField(blank=True)
+    stock = models.IntegerField(blank=False, null=False, default=0)
+    is_active = models.BooleanField(default=True)
     is_digital = models.BooleanField(default=False)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True, blank=True)
     category = TreeForeignKey(

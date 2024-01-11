@@ -13,13 +13,18 @@ category_list = CategoryViewSet.as_view(
 
 brand_list = BrandViewSet.as_view({"get": "list", "post": "create"})
 product_list = ProductViewSet.as_view(
-    {"get": "list", "post": "create", "patch": "update", "delete": "destroy"}
+    {
+        "get": "list",
+        "post": "create",
+        "patch": "update",
+        "delete": "destroy",
+    }
 )
 
 
 urlpatterns = [
     path("product/", product_list, name="product-list"),
-    path("product/<int:pk>/", product_list, name="delete-product"),
+    path("product/<int:pk>/", product_list, name="view-delete-product"),
     path(
         "product/<int:pk>/attach_image",
         ProductImageUpload.as_view(),

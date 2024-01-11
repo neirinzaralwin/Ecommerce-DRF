@@ -1,11 +1,13 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, generics
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Category, Brand, Product, Discount, ProductImage
 from .validations.discount_validation import validateDiscountPercentage
 from ecommerce.common.custom_pagination import CustomPagination, PaginationHandlerMixin
+from ecommerce.user.managers.jwt_manager import get_user_from_access_token
+
 from ecommerce.permissions import (
     IsAdminInheritStaff,
     IsAdminOrStaff,
@@ -109,6 +111,15 @@ class ProductViewSet(viewsets.ViewSet, PaginationHandlerMixin):
         )
 
     def update(self, request, pk=None):
+        # check admin or staff to update product
+        user = get_user_from_access_token(self, request)
+        if user is not None:
+            if not (user.is_staff or user.is_admin):
+                return Response(
+                    {"error": "You are not authorized to update products"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
         try:
             discounts_data = request.data.pop("discounts", None)
             instance = self.queryset.get(pk=pk)
@@ -167,6 +178,7 @@ class ProductViewSet(viewsets.ViewSet, PaginationHandlerMixin):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def product_detail_view(request):
     id = request.GET.get("id", None)
     queryset = Product.objects.all()

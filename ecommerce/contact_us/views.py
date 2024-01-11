@@ -9,6 +9,15 @@ from ecommerce.contact_us.models import Contact, ContactType
 from ecommerce.contact_us.serializers import ContactSerializer
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
+
+class ContactTypeView(APIView):
+    permission_classes = [IsAdminOrStaff]
+
+    def get(self, request):
+        contactTypeList = [choice[0] for choice in ContactType.choices]
+        return Response({"data": sorted(contactTypeList)}, status=status.HTTP_200_OK)
 
 
 class ContactViewSet(viewsets.ViewSet):
@@ -30,7 +39,7 @@ class ContactViewSet(viewsets.ViewSet):
 
     def update(self, request, pk=None):
         contact = get_object_or_404(Contact, pk=pk)
-        serializer = ContactSerializer(contact, data=request.data)
+        serializer = ContactSerializer(contact, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
