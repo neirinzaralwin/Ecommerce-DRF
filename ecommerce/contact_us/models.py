@@ -19,3 +19,7 @@ class Contact(models.Model):
     )
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
+
+
+class AboutUs(models.Model):
+    text = models.TextField(default="", max_length=3000)

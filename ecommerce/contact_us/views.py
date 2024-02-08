@@ -5,8 +5,8 @@ from ecommerce.permissions import (
     IsAuthenticated,
     AllowAny,
 )
-from ecommerce.contact_us.models import Contact, ContactType
-from ecommerce.contact_us.serializers import ContactSerializer
+from ecommerce.contact_us.models import Contact, ContactType, AboutUs
+from ecommerce.contact_us.serializers import ContactSerializer, AboutUsSerializer
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -66,3 +66,25 @@ class ContactViewSet(viewsets.ViewSet):
                 {"error": "Contact doesn't exist"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+class AboutUsViewSet(viewsets.ViewSet):
+    permission_classes = [IsAdminOrStaff]
+
+    def retrieve(self, request):
+        aboutUs = AboutUs.objects.first()
+        if not aboutUs:
+            # create and save an object
+            aboutUs = AboutUs.objects.create(text="")
+            aboutUs.save()
+        serializer = AboutUsSerializer(aboutUs)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def update(self, request):
+        aboutUs = AboutUs.objects.first()
+        serializer = AboutUsSerializer(aboutUs, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
